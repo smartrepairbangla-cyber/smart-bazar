@@ -1,0 +1,96 @@
+
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Smart Bazar Admin</title>
+<style>
+body{font-family:Arial;background:#f3f5f7;margin:0;color:#222}
+header{background:#087b45;color:white;padding:20px;text-align:center}
+main{max-width:750px;margin:25px auto;padding:15px}
+.box{background:white;padding:20px;border-radius:12px;margin-bottom:20px}
+input,textarea,select{width:100%;padding:12px;margin:8px 0;border:1px solid #ccc;border-radius:7px;box-sizing:border-box}
+button{background:#087b45;color:white;border:0;padding:12px 18px;border-radius:7px;cursor:pointer}
+.product{background:#f8faf9;padding:12px;margin:10px 0;border-radius:9px;display:flex;gap:12px;align-items:center}
+.product img{width:75px;height:75px;object-fit:contain}
+.small{font-size:13px;color:#666}
+</style>
+</head>
+<body>
+<header><h1>🛒 Smart Bazar Admin</h1></header>
+<main>
+<div class="box">
+<h2>নতুন পণ্য যোগ করুন</h2>
+<form id="form">
+<label>পণ্যের নাম</label>
+<input id="name" required placeholder="যেমন Samsung Mobile">
+<label>ক্যাটাগরি</label>
+<select id="category">
+<option>ইলেকট্রনিক্স</option>
+<option>ফ্যাশন</option>
+<option>ঘর ও রান্নাঘর</option>
+<option>সৌন্দর্য</option>
+</select>
+<label>দাম (টাকা)</label>
+<input id="price" type="number" required min="0">
+<label>পণ্যের ছবি</label>
+<input id="photo" type="file" accept="image/*">
+<label>বিবরণ</label>
+<textarea id="description"></textarea>
+<button type="submit">পণ্য যোগ করুন</button>
+</form>
+<p class="small">এটি প্রাথমিক ডেমো। পণ্য এই ব্রাউজারে সংরক্ষিত থাকবে।</p>
+</div>
+<div class="box">
+<h2>পণ্যের তালিকা</h2>
+<div id="list"></div>
+</div>
+</main>
+<script>
+const KEY='smartBazarDemoProducts';
+let image='';
+document.getElementById('photo').onchange=e=>{
+ const f=e.target.files[0];
+ if(!f)return;
+ if(!f.type.startsWith('image/')){alert('ছবি নির্বাচন করুন');return;}
+ if(f.size>2*1024*1024){alert('২ MB-এর ছোট ছবি দিন');return;}
+ const r=new FileReader();
+ r.onload=()=>image=r.result;
+ r.readAsDataURL(f);
+};
+document.getElementById('form').onsubmit=e=>{
+ e.preventDefault();
+ const products=JSON.parse(localStorage.getItem(KEY)||'[]');
+ products.push({
+ id:Date.now(),
+ name:document.getElementById('name').value,
+ category:document.getElementById('category').value,
+ price:document.getElementById('price').value,
+ description:document.getElementById('description').value,
+ image
+ });
+ try{
+ localStorage.setItem(KEY,JSON.stringify(products));
+ alert('পণ্য যোগ হয়েছে');
+ e.target.reset();image='';show();
+ }catch(err){alert('সংরক্ষণ করা যায়নি। ছোট ছবি ব্যবহার করুন।');}
+};
+function show(){
+ const products=JSON.parse(localStorage.getItem(KEY)||'[]');
+ document.getElementById('list').innerHTML=products.map(p=>
+ `<div class="product">
+ ${p.image?`<img src="${p.image}" alt="">`:''}
+ <div><b>${safe(p.name)}</b><br>৳${safe(p.price)}<br>
+ <button onclick="removeItem(${p.id})">মুছুন</button></div>
+ </div>`).join('')||'এখনো কোনো পণ্য নেই';
+}
+function safe(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function removeItem(id){
+ const p=JSON.parse(localStorage.getItem(KEY)||'[]').filter(x=>x.id!==id);
+ localStorage.setItem(KEY,JSON.stringify(p));show();
+}
+show();
+</script>
+</body>
+</html>
